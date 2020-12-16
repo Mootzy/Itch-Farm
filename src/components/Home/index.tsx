@@ -10,7 +10,7 @@ export const Home = observer(() => {
 	const store = useContext(StoreContext);
 	const { router: { goTo } } = store;
 
-	goTo(views.collection, { collection: collections[0].id })
+	goTo(views.vault, { collection: collections[0].id, id: collections[0].contracts.geysers[0] })
 
 	return (
 		<Loader />

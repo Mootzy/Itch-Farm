@@ -69,9 +69,9 @@ export const Asset = observer(() => {
 		<Container maxWidth="lg">
 			<Grid container spacing={2} className={classes.assetContainer}>
 
-				<Grid item xs={6}>
+				{/* <Grid item xs={6}>
 					<Button onClick={goBack} startIcon={<ArrowBack />} >{collection.title}</Button>
-				</Grid>
+				</Grid> */}
 
 				<Grid item xs={12} className={classes.filters}>
 

@@ -12,9 +12,9 @@ import { UseWalletProvider } from 'use-wallet'
 
 const useStyles = makeStyles((theme) => ({
 	logo: {
-		width: "20%",
-		minWidth: "4rem",
-		margin: theme.spacing(2, 2, 2, 0)
+		width: "70%",
+		minWidth: "5rem",
+		margin: theme.spacing(4, 'auto', 4, 'auto')
 		// display: "block"
 	},
 	listHeader: {
@@ -99,24 +99,24 @@ export const Sidebar = observer(() => {
 			<div className={classes.root}>
 				<div className={classes.header}>
 
-					<img src={require('../../assets/commonyield.png')} className={classes.logo} />
+					<img alt="Common Yield" src={require('../../assets/itchiro-logo.png')} className={classes.logo} />
 					<div>
 
 						<Wallet />
-						<ButtonGroup variant="outlined" size="small" className={classes.currency}>
+						{/* <ButtonGroup variant="outlined" size="small" className={classes.currency}>
 							<Button variant="contained">ETH</Button>
 							<Button>USD</Button>
 							<Button>BTC</Button>
-						</ButtonGroup>
+						</ButtonGroup> */}
 
 					</div>
 				</div>
 
-				<Typography variant="body2" color="textSecondary">collections</Typography>
+				{/* <Typography variant="body2" color="textSecondary">collections</Typography>
 
 				<List >
 					{renderCollections()}
-				</List>
+				</List> */}
 
 			</div >
 		</UseWalletProvider>
