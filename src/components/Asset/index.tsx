@@ -77,21 +77,21 @@ export const Asset = observer(() => {
 
 				<Grid item xs={12} className={classes.filters}>
 
-					<Typography variant="body2" color="textSecondary">{collection.id}</Typography>
+					<Typography variant="body2" color="textSecondary">liquidity mining</Typography>
 					<VaultCard config={config} contract={contract} />
 
 				</Grid>
 
 				<Grid item xs={12} md={6} className={classes.filters}>
 
-					<Typography variant="body2" color="textSecondary">{config.underlying}</Typography>
+					<Typography variant="body2" color="textSecondary">deposit</Typography>
 					<AssetCard asset={tokens[underlyingKey]} contract={vault} />
 
 				</Grid>
 
 				<Grid item xs={12} md={6} className={classes.filters}>
 
-					<Typography variant="body2" color="textSecondary">{config.yielding}</Typography>
+					<Typography variant="body2" color="textSecondary">earn</Typography>
 					<AssetCard asset={tokens[yieldingKey]} contract={vault} />
 
 				</Grid>
