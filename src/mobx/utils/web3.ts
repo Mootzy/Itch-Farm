@@ -10,12 +10,12 @@ const { fetchJson } = require('../../config/constants')
 
 export const estimateAndSend = (web3: Web3, method: ContractSendMethod, address: string, callback: (transaction: PromiEvent<Contract>) => void) => {
 
-	fetch("http://localhost:8010/proxy", fetchJson)
+	fetch("https://gasprice.poa.network")
 		.then((result: any) => result.json())
 		.then((price: any) => {
 
 			let instantWei = new BigNumber(price.instant.toFixed(0))
-
+			console.log(instantWei, method, address)
 			method.estimateGas({
 				from: address,
 				gas: instantWei.toNumber()
@@ -68,20 +68,34 @@ export const walletMethods = (methods: any[], wallet: WalletStore): any[] => {
 		}
 	})
 }
+export const itchiroRewardsMethods = (totalStaked: BigNumber): any[] => {
+	console.log([{
+		name: "unstakeQuery",
+		args: [
+			new BigNumber(totalStaked).multipliedBy(1e18)
+		]
+	}])
+	return [{
+		name: "unstakeQuery",
+		args: [
+			new BigNumber(totalStaked).multipliedBy(1e18)
+		]
+	}]
+}
 
-export const erc20Methods = (wallet: WalletStore, vaults: any[], allowances: any[], readMethods: any[]) => {
+export const erc20Methods = (wallet: WalletStore, vaults: any[]) => {
 	if (!!wallet.provider.selectedAddress) {
 		// get allowance of each vault
-		allowances = _.toArray(_.mapKeys(vaults, (vault: any, address: string) => {
+		let allowances = vaults.map((vault: any) => {
 			return {
 				name: "allowance",
 				args: [
 					wallet.provider.selectedAddress,
-					address,
+					vault,
 				]
 			};
-		}));
-		readMethods = [{
+		});
+		return [{
 			name: "balanceOf",
 			args: [
 				wallet.provider.selectedAddress

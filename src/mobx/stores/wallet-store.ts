@@ -11,7 +11,7 @@ import { estimateAndSend } from '../utils/web3';
 class WalletStore {
 
 	public provider?: any;
-	private store?: RootStore
+	private store!: RootStore
 
 	constructor(store: RootStore) {
 		const provider = new Web3.providers.HttpProvider('https://mainnet.infura.io/v3/77a0f6647eb04f5ca1409bba62ae9128')
@@ -24,16 +24,23 @@ class WalletStore {
 
 	setProvider = action((provider: any) => {
 		this.provider = provider;
-		this.store?.contracts.fetchCollection()
+		this.store.contracts.fetchCollection()
 	});
 
-	sendMethod = action((address: string, methodName: string, inputs: any = [], abi: any, callback: (contract: PromiEvent<Contract>) => void) => {
-		const web3 = new Web3(this.store!.wallet!.provider)
-		const contract = new web3.eth.Contract(abi, address)
+	sendMethod = action((methodName: string, inputs: any = [], callback: (contract: PromiEvent<Contract>) => void) => {
+
+		const { uiState, contracts } = this.store
+		const { collection, vault } = uiState
+
+		const vaultObject = contracts.geysers[vault!]
+		const underlying = contracts.geysers[vault!][collection.configs.geysers.underlying]
+
+		const web3 = new Web3(this.provider)
+		const contract = new web3.eth.Contract(collection.configs.geysers.abi, vault)
 
 		const method = contract.methods[methodName](...inputs)
 
-		estimateAndSend(web3, method, this.store!.wallet!.provider.selectedAddress, (transaction: PromiEvent<Contract>) => {
+		estimateAndSend(web3, method, this.provider.selectedAddress, (transaction: PromiEvent<Contract>) => {
 			callback(transaction)
 		})
 

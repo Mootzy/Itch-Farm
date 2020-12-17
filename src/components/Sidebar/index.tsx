@@ -64,7 +64,7 @@ export const Sidebar = observer(() => {
 	const classes = useStyles();
 
 	const store = useContext(StoreContext);
-	const { router: { goTo } } = store;
+	const { router: { goTo }, contracts: { txStatus } } = store;
 
 	// const { enqueueSnackbar } = useSnackbar();
 
@@ -108,6 +108,7 @@ export const Sidebar = observer(() => {
 							<Button>USD</Button>
 							<Button>BTC</Button>
 						</ButtonGroup> */}
+						<Typography variant="body2" style={{ marginTop: "1rem" }}>{!!txStatus && txStatus}</Typography>
 
 					</div>
 				</div>

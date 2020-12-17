@@ -40,18 +40,16 @@ export const VaultFunction = observer((props: any) => {
 	const { register, handleSubmit, watch, errors } = useForm({ mode: 'all' });
 
 
-	const { uiState: { collection, vault }, wallet: { provider, sendMethod } } = store;
+	const { uiState: { collection, vault }, wallet: { provider, sendMethod }, contracts: { fetchCollection, txStatus } } = store;
 
 	const [state, setState] = useState<any>({ status: method.stateMutability })
 
 	const onSubmit = (params: any) => {
-		console.log(vault)
-
 		let inputs = !!params[method.name] ? params[method.name].map((param: string) => {
-			return /\-?\d+\.*\d+/.test(param) ? new BigNumber(parseFloat(param)).multipliedBy(1e18) : param;
+			return /\-?\d+\.*\d+/.test(param) ? new BigNumber(parseFloat(param)).multipliedBy(1e18).toString() : param;
 		}) : []
-		console.log(inputs)
-		sendMethod(vault!, method.name, inputs, collection.config.abi, onTransaction)
+		inputs[1] = '0x'
+		sendMethod(method.name, inputs, onTransaction)
 	}
 
 	const onTransaction = (transaction: PromiEvent<Contract>) => {
@@ -60,6 +58,7 @@ export const VaultFunction = observer((props: any) => {
 				setState({ status: 'pending', hash: hash })
 			}).on('receipt', (reciept: any) => {
 				setState({ status: 'success', hash: state.hash })
+				fetchCollection()
 
 			}).catch((error: any) => {
 				setState({ status: 'error', hash: state.hash })
@@ -75,7 +74,7 @@ export const VaultFunction = observer((props: any) => {
 			case 'uint256':
 				return <TextField type="text" disabled={state.status === "pending"} autoComplete="off" placeholder="Type a number" name={`${method.name}[${index}]`} inputRef={register} fullWidth className={classes.field} />
 			case 'bytes':
-				return <TextField type="text" disabled={state.status === "pending"} autoComplete="off" placeholder="Type some bytes" name={`${method.name}[${index}]`} inputRef={register} fullWidth className={classes.field} />
+				return <TextField type="text" disabled={true} value="0x" autoComplete="off" placeholder="Type some bytes" name={`${method.name}[${index}]`} inputRef={register} fullWidth className={classes.field} />
 			case 'bytes32':
 				return <TextField type="text" disabled={state.status === "pending"} autoComplete="off" placeholder="Type some bytes32" name={`${method.name}[${index}]`} inputRef={register} fullWidth className={classes.field} />
 		}
@@ -113,7 +112,7 @@ export const VaultFunction = observer((props: any) => {
 				{method.inputs
 					.map((input: any, index: number) => {
 
-						return <div key={input.name} className={classes.stat}>
+						return <div key={input.name} className={classes.stat} style={{ display: (input.name == "data") ? 'none' : 'block' }}>
 							<Typography variant="subtitle1">{input.name}</Typography>
 							{actionInput(input.type, input.name, index)}
 						</div>

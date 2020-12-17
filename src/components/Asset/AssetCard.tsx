@@ -36,16 +36,23 @@ const useStyles = makeStyles((theme) => ({
 
 
 }));
+const statNames: { [key: string]: string } = {
+	"name": "token name",
+	"address": "contract address",
+	"balanceOf": "your wallet",
+	"allowance": "allowance",
+	"unstakeQeury": "JEM earned"
+}
 export const AssetCard = observer((props: any) => {
 	const store = useContext(StoreContext);
 	const classes = useStyles();
-	const { asset, contract } = props
+	const { asset, contract, showAllowance } = props
 
-	const { router: { params, goTo }, wallet: { provider }, contracts: { vaults, tokens, geysers } } = store;
+	const { router: { params, goTo }, wallet: { provider }, contracts: { vaults, tokens, geysers, increaseAllowance } } = store;
 
 
-	const stat = (key: any, value: any) => <div className={classes.stat}>
-		<Typography color="textSecondary" variant="subtitle2">{key}</Typography>
+	const stat = (key: string, value: any) => <div key={key} className={classes.stat}>
+		<Typography color="textSecondary" variant="subtitle2">{statNames[key]}</Typography>
 		<Typography variant="body1">{value}</Typography>
 		<img src={require("../../assets/fade.png")} className={classes.fade} />
 	</div>
@@ -63,6 +70,7 @@ export const AssetCard = observer((props: any) => {
 	return <Card >
 		<CardContent className={classes.card} >
 			{Object.keys(asset)
+				.filter((key: string) => ["name", "address", "allowance", "balanceOf"].includes(key))
 				.map((key: string) => {
 					let value = asset[key]
 					if (BigNumber.isBigNumber(value)) {
@@ -72,9 +80,9 @@ export const AssetCard = observer((props: any) => {
 				})}
 
 		</CardContent>
-		<CardActions>
-			<Button variant="outlined" onClick={() => { }} disabled={!provider}>increase allowance</Button>
-		</CardActions>
+		{!!showAllowance && !!provider.selectedAddress && <CardActions>
+			<Button variant="outlined" onClick={increaseAllowance}>increase allowance</Button>
+		</CardActions>}
 	</Card>
 
 

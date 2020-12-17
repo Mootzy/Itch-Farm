@@ -49,15 +49,16 @@ export const Asset = observer(() => {
 	// 		.filter((method: any) => method.type == "function" && method.inputs.length > 0)
 	// 		.map((method: any) => <Chip color={collection.config.config.actions.includes(method.name) ? 'primary' : 'default'} size="small" className={classes.filter} label={method.name} onClick={() => { addAction(method.name) }} onDelete={collection.config.config.actions.includes(method.name) ? () => removeAction(method.name) : undefined} />)
 	// }
-	if (!vault || (!vaults && !geysers) || !tokens) {
-		return <Loader />
-	}
-	const contract = !!vaults && !!vault && (vault in vaults) ? vaults[vault] : geysers[vault]
-	const config = !!vaults && !!vault && (vault in vaults) ? collection.configs.vaults : collection.configs.geysers
 
-	if (!config) {
+	if (!vault || (!vaults && !geysers) || !tokens)
 		return <Loader />
-	}
+
+	const contract = geysers[vault]
+	const config = !!vaults && !!vault && (vault in vaults) ? collection.configs.vaults : collection.configs.geysers
+	console.log((vault in geysers), vault, geysers)
+	if (!config || !contract)
+		return <Loader />
+
 	const underlyingKey = contract[config.underlying]
 	const yieldingKey = contract[config.yielding]
 
@@ -85,7 +86,7 @@ export const Asset = observer(() => {
 				<Grid item xs={12} md={6} className={classes.filters}>
 
 					<Typography variant="body2" color="textSecondary">deposit</Typography>
-					<AssetCard asset={tokens[underlyingKey]} contract={vault} />
+					<AssetCard asset={tokens[underlyingKey]} contract={vault} showAllowance={true} />
 
 				</Grid>
 
@@ -96,10 +97,7 @@ export const Asset = observer(() => {
 
 				</Grid>
 
-				<Grid item xs={12} md={12} className={classes.filters}>
-					<Typography variant="body2" color="textSecondary">methods</Typography>
-					{/* {renderFilters()} */}
-				</Grid>
+
 
 				{renderActions()}
 

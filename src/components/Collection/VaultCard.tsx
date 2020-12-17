@@ -35,6 +35,14 @@ const useStyles = makeStyles((theme) => ({
 
 
 }));
+
+const statNames: { [key: string]: string } = {
+	"address": "contract address",
+	"totalStakedFor": "you've deposited",
+	"totalHarvested": "total JEM harvested",
+	"allowance": "allowance",
+	"totalStaked": "total deposited"
+}
 export const VaultCard = observer((props: any) => {
 	const store = useContext(StoreContext);
 	const classes = useStyles();
@@ -47,7 +55,7 @@ export const VaultCard = observer((props: any) => {
 	}
 
 	const stat = (key: any, value: any) => <div key={key} className={classes.stat}>
-		<Typography color="textSecondary" variant="subtitle2">{key}</Typography>
+		<Typography color="textSecondary" variant="subtitle2">{statNames[key]}</Typography>
 		<Typography variant="body1">{value}</Typography>
 		<img src={require("../../assets/fade.png")} className={classes.fade} />
 	</div>

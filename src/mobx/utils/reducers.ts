@@ -18,13 +18,19 @@ export const reduceBatchResult = (result: any[]): any[] => {
 					reduced[name] = (value as string).toLowerCase()
 				else
 					reduced[name] = value
+			} else if (_.isString(element)) {
+
+				reduced[name] = element
+			} else {
+				reduced[name] = JSON.stringify(element)
+
 			}
 		});
 		return reduced
 	})
 }
 export const reduceGraphResult = (batchResult: any, graphResult: any[]) => {
-	let batch = _.clone(batchResult)
+	let batch: any = {}
 	graphResult.forEach((element: any) => {
 		if (!element.data.pair && !element.data.token)
 			return
@@ -38,7 +44,8 @@ export const reduceGraphResult = (batchResult: any, graphResult: any[]) => {
 			name: !!element.data.pair ? element.data.pair.token0.name + '/' + element.data.pair.token1.name : element.data.token.name,
 			ethValue: ethValue
 		}
-		batch[tokenAddress] = { ...token, ...batch[tokenAddress] }
+		console.log({ ...token, ...batchResult[tokenAddress.toLowerCase()] })
+		batch[tokenAddress.toLowerCase()] = { ...token, ...batchResult[tokenAddress.toLowerCase()] }
 	})
 
 	return batch

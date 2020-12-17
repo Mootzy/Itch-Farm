@@ -14,7 +14,7 @@ export const collections = [
 		configs: {
 			geysers: {
 				abi: ItchiroVault.abi,
-				table: ['address', 'totalStaked', 'totalLockedShares', 'totalStakedFor', 'getNumStakes', 'getUnstakable'],
+				table: ['address', 'totalStaked', 'totalStakedFor', 'totalHarvested', 'unstakeQuery', 'harvest'],
 				actions: ['stake', 'unstake'],
 				underlying: 'token',
 				yielding: 'getDistributionToken',

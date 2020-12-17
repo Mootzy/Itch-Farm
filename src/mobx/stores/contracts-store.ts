@@ -1,13 +1,15 @@
 import { extendObservable, action } from 'mobx';
 import Web3 from 'web3'
 import BatchCall from "web3-batch-call";
-import { batchConfig, getTokenAddresses, walletMethods, erc20Methods } from "../utils/web3"
+import { batchConfig, getTokenAddresses, walletMethods, erc20Methods, itchiroRewardsMethods, estimateAndSend } from "../utils/web3"
 import BigNumber from 'bignumber.js';
 import { RootStore } from '../store';
 import _ from 'lodash';
 import { reduceBatchResult, reduceGraphResult } from '../utils/reducers';
 import { graphQuery } from '../utils/helpers';
 import { collections } from '../../config/constants';
+import { PromiEvent } from 'web3-core';
+import { Contract } from 'web3-eth-contract';
 
 // const MAX_UINT256 = new BigNumber(2)
 // 	.pow(256)
@@ -25,15 +27,15 @@ const options = {
 	},
 }
 
-const batchCall = new BatchCall(options);
-
-
 class ContractsStore {
 	private store!: RootStore;
+	private batchCall = new BatchCall(options);
 
 	public tokens?: any;
 	public vaults?: any;
 	public geysers?: any;
+
+	public txStatus?: string;
 
 	constructor(store: RootStore) {
 		this.store = store
@@ -42,6 +44,7 @@ class ContractsStore {
 			vaults: undefined,
 			tokens: undefined,
 			geysers: undefined,
+			txStatus: undefined,
 		});
 	}
 
@@ -54,7 +57,6 @@ class ContractsStore {
 
 		const { vaults, geysers } = collection.contracts
 
-
 		// currently supports vaults & geysers ]
 		let batchContracts: any[] = []
 		_.mapKeys(collection.configs, (config: any, namespace: string) => {
@@ -63,9 +65,7 @@ class ContractsStore {
 			batchContracts.push(batchConfig(namespace, wallet, collection.contracts[namespace], methods, config.abi))
 		})
 
-		console.log(batchContracts, 'batchContracts')
-
-		batchCall.execute(batchContracts)
+		this.batchCall.execute(batchContracts)
 			.then((result: any) => {
 				let keyedResult = _.groupBy(result, 'namespace')
 
@@ -75,14 +75,6 @@ class ContractsStore {
 					else
 						this.geysers = _.keyBy(reduceBatchResult(value), 'address')
 				})
-
-				if (!("vaults" in keyedResult))
-					this.vaults = {}
-				if (!("geysers" in keyedResult))
-					this.geysers = {}
-
-				console.log(this.vaults, this.geysers, keyedResult)
-
 				this.fetchTokens()
 			})
 			.catch((error: any) => console.log(error))
@@ -95,25 +87,20 @@ class ContractsStore {
 
 		let tokenAddresses: any[] = []
 		_.mapKeys(collection.configs, (config: any, namespace: string) => {
-			console.log(namespace, config)
 			let addresses = namespace === "vaults" ? this.vaults : this.geysers
 			tokenAddresses.push(getTokenAddresses(addresses, config))
-			console.log(getTokenAddresses(addresses, config))
 		})
 
 		tokenAddresses = _.uniq(_.flatten(tokenAddresses))
 		tokenAddresses = _.compact(tokenAddresses)
 		// Prepare graph queries
-		console.log(tokenAddresses)
 
 		let graphQueries = tokenAddresses.map((address: string) => graphQuery(address)); //TODO: make 1 query
 
 		// Prepare batch call
-		let allowances: any[] = []
-		let readMethods: any[] = []
-		erc20Methods(wallet, this.vaults, allowances, readMethods);
+		let readMethods = erc20Methods(wallet, _.compact(_.concat(collection.contracts.vaults, collection.contracts.geysers)));
 
-		const tokenBatch: Promise<any> = batchCall.execute([batchConfig('tokens', wallet, tokenAddresses, readMethods, ERC20.abi, true)])
+		const tokenBatch: Promise<any> = this.batchCall.execute([batchConfig('tokens', wallet, tokenAddresses, readMethods || [], ERC20.abi, true)])
 
 		Promise.all([tokenBatch, ...graphQueries])
 			.then((result: any[]) => {
@@ -121,33 +108,78 @@ class ContractsStore {
 				let tokens = _.keyBy(reduceBatchResult(result.shift()), 'address')
 				this.tokens = reduceGraphResult(tokens, result)
 
+				this.fetchRewards()
+
 			})
 	});
 
+	fetchRewards = action(() => {
 
+		return
+		const { wallet, uiState } = this.store
+		const { collection, vault } = uiState
 
-	// increaseAllowance = action(() => {
-	// 	const underlying = this.vault[this.collection.config.config.underlying]
+		if (!this.store.wallet.provider.selectedAddress)
+			return
+		else {
+			const options = {
+				web3: new Web3(this.store.wallet.provider),
+				etherscan: {
+					apiKey: "NXSHKK6D53D3R9I17SR49VX8VITQY7UC6P",
+					delayTime: 300
+				},
+			}
+			this.batchCall = new BatchCall(options)
+		}
 
-	// 	if (!underlying)
-	// 		return
+		const { vaults, geysers } = collection.contracts
 
-	// 	const underlyingAsset = this.assets[underlying]
+		let methods = itchiroRewardsMethods(this.geysers[geysers[0]].totalStakedFor)
+		let config = batchConfig("rewards", wallet, geysers, methods, collection.configs.geysers.abi)
+		this.batchCall.execute([config])
+			.then((result: any) => {
+				let keyedResult = _.groupBy(result, 'namespace')
 
-	// 	const web3 = new Web3(this.store!.wallet!.provider)
-	// 	const underlyingContract = new web3.eth.Contract(ERC20.abi, underlying)
-	// 	const method = underlyingContract.methods.approve(this.vault.address, underlyingAsset.totalSupply)
+				_.mapKeys(keyedResult, (value: any, key: string) => {
+					if (key === "rewards") {
+						let result = reduceBatchResult(value)
+						this.geysers[geysers[0]].unstakeQuery = JSON.stringify(result)
+					}
+				})
+			})
+			.catch((error: any) => console.log(error))
 
-	// 	estimateAndSend(web3, method, this.store!.wallet!.provider.selectedAddress, (transaction: PromiEvent<Contract>) => {
-	// 		transaction
-	// 			.on('transactionHash', (hash: string) => {
-	// 				this.errorMessage = hash
-	// 			}).on('receipt', (reciept: any) => {
-	// 				this.errorMessage = "Allowance increased."
-	// 			}).catch((error: any) => this.errorMessage = error.message)
+	});
 
-	// 	})
-	// });
+	increaseAllowance = action(() => {
+		const { wallet, uiState } = this.store
+		const { collection, vault } = uiState
+
+		const vaultObject = this.geysers[vault!]
+		const underlying = this.geysers[vault!][collection.configs.geysers.underlying]
+
+		if (!underlying)
+			return
+
+		const underlyingAsset = this.tokens[underlying]
+
+		const web3 = new Web3(wallet.provider)
+		const underlyingContract = new web3.eth.Contract(ERC20.abi, underlying)
+		const method = underlyingContract.methods.approve(vaultObject.address, underlyingAsset.totalSupply.toString())
+
+		estimateAndSend(web3, method, this.store!.wallet!.provider.selectedAddress, (transaction: PromiEvent<Contract>) => {
+			transaction
+				.on('transactionHash', (hash: string) => {
+					this.txStatus = "Confirming allowance..."
+				}).on('receipt', (reciept: any) => {
+					this.txStatus = "Allowance increased."
+					this.fetchTokens()
+				}).catch((error: any) => {
+					this.txStatus = error.mesasage
+				})
+
+		})
+	});
 
 }
 
