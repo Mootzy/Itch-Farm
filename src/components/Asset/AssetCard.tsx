@@ -81,7 +81,9 @@ export const AssetCard = observer((props: any) => {
 
 		</CardContent>
 		{!!showAllowance && !!provider.selectedAddress && <CardActions>
-			<Button variant="outlined" onClick={increaseAllowance}>increase allowance</Button>
+			<Button variant="outlined" color="primary" onClick={increaseAllowance}>increase allowance</Button>
+			<Button variant="outlined" href="https://app.uniswap.org/#/swap?inputCurrency=ETH&outputCurrency=0x21cf09bc065082478dcc9ccb5fd215a978dc8d86" target="blank">buy JEM</Button>
+			<Button variant="outlined" href="https://app.uniswap.org/#/add/ETH/0x21cf09BC065082478Dcc9ccB5fd215A978Dc8d86" target="blank">pool tokens</Button>
 		</CardActions>}
 	</Card>
 

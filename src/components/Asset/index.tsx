@@ -17,6 +17,7 @@ import { Loader } from '../Loader';
 import { VaultCard } from '../Collection/VaultCard';
 import { VaultFunction } from './VaultFunction';
 import { AssetCard } from './AssetCard';
+import _ from 'lodash';
 
 
 const useStyles = makeStyles((theme) => ({
@@ -63,8 +64,9 @@ export const Asset = observer(() => {
 	const yieldingKey = contract[config.yielding]
 
 	const renderActions = () => {
-		return config.abi
-			.filter((method: any) => method.type === "function" && config.actions.includes(method.name))
+		return _.sortBy(config.abi
+			.filter((method: any) => method.type === "function" && config.actions.includes(method.name)),
+			[(o: any) => config.actions.indexOf(o.name)])
 			.map((method: any) => <VaultFunction key={method.name} method={method} row={config.abi} />)
 	}
 

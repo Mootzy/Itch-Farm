@@ -19,7 +19,7 @@ import { Sidebar } from './components/Sidebar';
 const theme = createMuiTheme({
 	palette: {
 		type: 'dark',
-		primary: { main: "#69ff70" },
+		primary: { main: "#12a9b4" },
 
 	},
 	typography: {

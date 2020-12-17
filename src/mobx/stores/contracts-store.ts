@@ -1,7 +1,7 @@
 import { extendObservable, action } from 'mobx';
 import Web3 from 'web3'
 import BatchCall from "web3-batch-call";
-import { batchConfig, getTokenAddresses, walletMethods, erc20Methods, itchiroRewardsMethods, estimateAndSend } from "../utils/web3"
+import { batchConfig, getTokenAddresses, walletMethods, erc20Methods, itchiroRewardsMethod, estimateAndSend } from "../utils/web3"
 import BigNumber from 'bignumber.js';
 import { RootStore } from '../store';
 import _ from 'lodash';
@@ -55,12 +55,26 @@ class ContractsStore {
 		if (!collection)
 			return
 
+
+		if (wallet.provider.selectedAddress) {
+
+			const options = {
+				web3: new Web3(wallet.provider),
+				etherscan: {
+					apiKey: "NXSHKK6D53D3R9I17SR49VX8VITQY7UC6P",
+					delayTime: 300
+				},
+			}
+			this.batchCall = new BatchCall(options);
+		}
+
 		const { vaults, geysers } = collection.contracts
 
 		// currently supports vaults & geysers ]
 		let batchContracts: any[] = []
 		_.mapKeys(collection.configs, (config: any, namespace: string) => {
 			let methods = walletMethods(config.walletMethods, wallet)
+			// methods.push(itchiroRewardsMethod())
 
 			batchContracts.push(batchConfig(namespace, wallet, collection.contracts[namespace], methods, config.abi))
 		})
@@ -85,6 +99,7 @@ class ContractsStore {
 		const { wallet, uiState } = this.store
 		const { collection } = uiState
 
+
 		let tokenAddresses: any[] = []
 		_.mapKeys(collection.configs, (config: any, namespace: string) => {
 			let addresses = namespace === "vaults" ? this.vaults : this.geysers
@@ -107,49 +122,9 @@ class ContractsStore {
 
 				let tokens = _.keyBy(reduceBatchResult(result.shift()), 'address')
 				this.tokens = reduceGraphResult(tokens, result)
-
-				this.fetchRewards()
-
 			})
 	});
 
-	fetchRewards = action(() => {
-
-		return
-		const { wallet, uiState } = this.store
-		const { collection, vault } = uiState
-
-		if (!this.store.wallet.provider.selectedAddress)
-			return
-		else {
-			const options = {
-				web3: new Web3(this.store.wallet.provider),
-				etherscan: {
-					apiKey: "NXSHKK6D53D3R9I17SR49VX8VITQY7UC6P",
-					delayTime: 300
-				},
-			}
-			this.batchCall = new BatchCall(options)
-		}
-
-		const { vaults, geysers } = collection.contracts
-
-		let methods = itchiroRewardsMethods(this.geysers[geysers[0]].totalStakedFor)
-		let config = batchConfig("rewards", wallet, geysers, methods, collection.configs.geysers.abi)
-		this.batchCall.execute([config])
-			.then((result: any) => {
-				let keyedResult = _.groupBy(result, 'namespace')
-
-				_.mapKeys(keyedResult, (value: any, key: string) => {
-					if (key === "rewards") {
-						let result = reduceBatchResult(value)
-						this.geysers[geysers[0]].unstakeQuery = JSON.stringify(result)
-					}
-				})
-			})
-			.catch((error: any) => console.log(error))
-
-	});
 
 	increaseAllowance = action(() => {
 		const { wallet, uiState } = this.store
@@ -175,7 +150,7 @@ class ContractsStore {
 					this.txStatus = "Allowance increased."
 					this.fetchTokens()
 				}).catch((error: any) => {
-					this.txStatus = error.mesasage
+					this.txStatus = error.message
 				})
 
 		})

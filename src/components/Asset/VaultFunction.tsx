@@ -48,7 +48,8 @@ export const VaultFunction = observer((props: any) => {
 		let inputs = !!params[method.name] ? params[method.name].map((param: string) => {
 			return /\-?\d+\.*\d+/.test(param) ? new BigNumber(parseFloat(param)).multipliedBy(1e18).toString() : param;
 		}) : []
-		inputs[1] = '0x'
+		if (inputs.length > 0)
+			inputs[1] = '0x'
 		sendMethod(method.name, inputs, onTransaction)
 	}
 

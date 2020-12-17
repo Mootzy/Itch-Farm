@@ -68,19 +68,12 @@ export const walletMethods = (methods: any[], wallet: WalletStore): any[] => {
 		}
 	})
 }
-export const itchiroRewardsMethods = (totalStaked: BigNumber): any[] => {
-	console.log([{
-		name: "unstakeQuery",
-		args: [
-			new BigNumber(totalStaked).multipliedBy(1e18)
-		]
-	}])
-	return [{
-		name: "unstakeQuery",
-		args: [
-			new BigNumber(totalStaked).multipliedBy(1e18)
-		]
-	}]
+export const itchiroRewardsMethod = (): any => {
+
+	return {
+		name: "harvestQuery",
+		args: []
+	}
 }
 
 export const erc20Methods = (wallet: WalletStore, vaults: any[]) => {

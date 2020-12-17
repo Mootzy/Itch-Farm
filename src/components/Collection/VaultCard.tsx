@@ -68,7 +68,7 @@ export const VaultCard = observer((props: any) => {
 	const underlying = contract[config.underlying]
 
 	return <>
-		<Card>
+		<Card color="primary">
 			<CardActionArea onClick={() => openVault(contract.address)}>
 
 				<CardContent className={classes.card} >
